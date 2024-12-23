@@ -26,7 +26,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       });
       return todoList;
     } else {
-      throw Exception(res.data?["message"] ?? "Unable to fetch notes");
+      throw Exception(res.data["message"] ?? "Unable to fetch notes");
     }
   }
 
@@ -61,7 +61,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
         onPressed: () async {
           final res = await NavigationService.push(const AddTodoScreen());
           if (res == true) {
-            fetchTodos(); 
+            // fetchTodos(); 
+            setState((){});
           }
         },
         child: const Icon(Icons.add),
