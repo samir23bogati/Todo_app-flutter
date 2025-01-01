@@ -11,9 +11,36 @@ class Todo{
 
   factory Todo.fromMap(Map<String,dynamic> map){
     return Todo(
-      id:map["_id"],
+      id:map["_id"] ,
       title: map["title"],
       description: map["description"],
        );
+  }
+  factory Todo.fromLocalMap(Map<String,dynamic> map){
+    return Todo(
+      id:"" ,
+      title: map["title"],
+      description: map["description"],
+       );
+  }
+  Map<String,dynamic> toMap(){
+    final Map<String,dynamic> temp = {
+      "title":title,
+      "description":description,
+    };
+
+    return temp;
+
+  }
+  Todo copyWith({
+    String? id,
+    String? title,
+    String? description,
+  }){
+    return Todo(
+      id: id ?? this.id,
+      title: title?? this.title,
+      description: description ?? this.description,
+    );
   }
 }

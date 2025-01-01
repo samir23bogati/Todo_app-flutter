@@ -1,7 +1,14 @@
-import 'package:dio/dio.dart';
+// ignore_for_file: prefer_const_constructors
+
+import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:todo_app/Screens/add_todo_screen.dart';
-import 'package:todo_app/constants/constants.dart';
+import 'package:todo_app/cubit/common_state.dart';
+import 'package:todo_app/cubit/delete_todo_cubit.dart';
+import 'package:todo_app/cubit/fetch_todo_cubit.dart';
 import 'package:todo_app/modals/new_todo.dart';
 import 'package:todo_app/service/navigation_service.dart';
 import 'package:todo_app/widgets/todo_card.dart';
@@ -14,72 +21,109 @@ class HomePageScreen extends StatefulWidget {
 }
 
 class _HomePageScreenState extends State<HomePageScreen> {
-  List<Todo> _todos = []; 
+  List<String> selectedTodos = [];
 
-  Future<List<Todo>> fetchTodos() async {
-    final res = await Dio().get("${Constants.baseUrl}/api/notes");
-    if (res.statusCode == 200) {
-      final List<dynamic> listTodo = res.data["data"];
-      final todoList = listTodo.map((e) => Todo.fromMap(e)).toList();
-      setState(() {
-        _todos = todoList; 
-      });
-      return todoList;
-    } else {
-      throw Exception(res.data["message"] ?? "Unable to fetch notes");
-    }
-  }
-
-  void onAddOrUpdate(Todo todo) {
-    setState(() {
-      final index = _todos.indexWhere((e) => e.id == todo.id);
-      if (index != -1) {
-        _todos[index] = todo;
-      } else {
-        _todos.add(todo);
-      }
-    });
-  }
-
-  void onDelete(Todo todo) {
-    setState(() {
-      _todos.removeWhere((e) => e.id == todo.id);
-    });
-  }
+  //ValueNotifier<String> _countValueNotifier = ValueNotifier("");
 
   @override
   void initState() {
     super.initState();
-    fetchTodos();
+    context.read<FetchTodoCubit>().fetch();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final res = await NavigationService.push(const AddTodoScreen());
-          if (res == true) {
-            // fetchTodos(); 
-            setState((){});
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: _todos.isNotEmpty 
-          ? ListView.builder(
-              itemCount: _todos.length,
-              itemBuilder: (context, index) {
-                return TodoCard(
-                  todo: _todos[index],
-                  onDelete: () => onDelete(_todos[index]),
-                );
-              },
+        appBar: AppBar(
+          actions: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: BlocSelector<FetchTodoCubit, CommonState,String>(
+                selector: (state) {
+                  if (state is CommonSuccessState<List<Todo>>){
+                    return state.data.length.toString();
+                  }else{
+                    return "";
+                  }
+                },
+                builder: (context, state) {
+                   return Text(
+                    state,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                
+                 
+                },
+              ),
             )
-          : const Center(
-              child: Text("You have not saved any todos yet!"),
-            ),
-    );
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            NavigationService.push(const AddTodoScreen());
+          },
+          child: const Icon(Icons.add),
+        ),
+        body: BlocListener<DeleteTodoCubit, CommonState>(
+          listener: (context, state) {
+            if (state is CommonLoadingState) {
+              context.loaderOverlay.show();
+            } else {
+              context.loaderOverlay.hide();
+            }
+            if (state is CommonSuccessState) {
+              AnimatedSnackBar.material(
+                'Todo deletedsuccessfully',
+                type: AnimatedSnackBarType.success,
+                mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+              ).show(context);
+            } else if (state is CommonErrorState) {
+              AnimatedSnackBar.material(
+                state.message,
+                type: AnimatedSnackBarType.error,
+                mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+              ).show(context);
+            }
+          },
+          child: BlocBuilder<FetchTodoCubit, CommonState>(
+            builder: (context, state) {
+              if (state is CommonSuccessState<List<Todo>>) {
+                return ListView.builder(
+                  itemCount: state.data.length,
+                  itemBuilder: (context, index) {
+                    return TodoCard(
+                      todo: state.data[index],
+                      onUpdate: (value) async {
+                        NavigationService.push(
+                          AddTodoScreen(todo: state.data[index]),
+                        );
+                      },
+                      onDelete: () {
+                        context
+                            .read<DeleteTodoCubit>()
+                            .delete(id: state.data[index].id);
+                      },
+                    );
+                  },
+                );
+              } else if (state is CommonErrorState) {
+                return Center(
+                  child: Text(state.message),
+                );
+              } else if (state is CommonNoDataState) {
+                return const Center(
+                  child: Text("you have not saved any data yettt!!"),
+                );
+              } else {
+                return const Center(
+                  child: CupertinoActivityIndicator(radius: 16),
+                );
+              }
+            },
+          ),
+        ));
   }
 }
