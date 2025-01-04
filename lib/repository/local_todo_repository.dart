@@ -3,42 +3,52 @@
 import 'package:dartz/dartz.dart';
 import 'package:todo_app/modals/new_todo.dart';
 import 'package:todo_app/repository/todo_repository.dart';
-import 'package:ulid/ulid.dart';
-import 'package:faker/faker.dart';
+import 'package:todo_app/service/database_serice.dart';
 
 
 class LocalTodoRepository extends TodoRepository {
-  //final List<Todo> _todos = [];
-  List<Todo> _todos =List.generate(10, (index) => Todo(
-    id:Ulid().toUuid(),
-  title: Faker().person.name(),
-  description: Faker().lorem.sentence()),);
+  final List<Todo> _todos = [];
+  // List<Todo> _todos =List.generate(10, 
+  // (index) => Todo(
+  //   id:Ulid().toUuid(),
+  // title: Faker().person.name(),
+  // description: Faker().lorem.sentence()),);
+  final DatabaseService databaseService = DatabaseService();
+
+
   @override
   Future<Either<String, List<Todo>>> fetchTodos() async{
-    await Future.delayed(Duration(milliseconds: 500));
-    return Right(_todos);
+   final todoResp = await databaseService.fetchTodos();
+   _todos.clear();
+   _todos.addAll(todoResp);
+    return Right(todoResp);
   }
   
   @override
-  Future<Either<String, Todo>> addTodos({required Todo todo}) {
-    // TODO: implement addTodos
-    throw UnimplementedError();
+  Future<Either<String, Todo>> addTodos({required Todo todo}) async{
+   final addedTodo = await databaseService.addTodo(todo);
+   _todos.add(addedTodo);
+   return Right(addedTodo);
   }
   
   @override
-  Future<Either<String, void>> deleteTodos({required String id}) {
-    // TODO: implement deleteTodos
-    throw UnimplementedError();
+  Future<Either<String, void>> deleteTodos({required String id})async {
+   await databaseService.deleteTodo(id);
+   _todos.removeWhere((e) => e.id ==id);
+   return Right(null);
   }
   
   @override
-  Future<Either<String, Todo>> updateTodos({required Todo todo}) {
-    // TODO: implement updateTodos
-    throw UnimplementedError();
+  Future<Either<String, Todo>> updateTodos({required Todo todo})async {
+    final updatedTodo = await databaseService.updateTodo(todo);
+    final index = _todos.indexWhere((e) => e.id == todo.id);
+    if (index != -1){
+      _todos[index] = updatedTodo;
+    }
+    return Right(updatedTodo);
   }
   
   @override
-  // TODO: implement todos
-  List<Todo> get todos => throw UnimplementedError();
+  List<Todo> get todos => _todos;
    
 }

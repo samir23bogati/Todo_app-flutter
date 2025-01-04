@@ -23,6 +23,13 @@ class Todo{
       description: map["description"],
        );
   }
+   factory Todo.fromDBMap(Map<String,dynamic> map){
+    return Todo(
+      id:map["id"] ,
+      title: map["title"],
+      description: map["description"],
+       );
+  }
   Map<String,dynamic> toMap(){
     final Map<String,dynamic> temp = {
       "title":title,
