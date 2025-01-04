@@ -17,7 +17,7 @@ class DatabaseService{
           version: 1,
           onCreate: (db, version)async {
        await db.execute(
- 'CREATE TABLE $_tableName (id TEXT PRIMARY KEY, title TEXT, description TEXT,created_at int)'
+ 'CREATE TABLE $_tableName (id TEXT PRIMARY KEY, title TEXT, description TEXT,created_at INTEGER)'
        );
           },
           );
@@ -34,7 +34,7 @@ class DatabaseService{
  Future<Todo> addTodo(Todo todo )async{
      final instance = await dbInstance;
     final Map<String,dynamic> mapData = {
-      "id": Ulid().toUuid(),
+      "id": todo.id.isNotEmpty ? todo.id :"local_${Ulid().toUuid()}",
       "title": todo.title,
       "description": todo.description,
       "created_at":DateTime.now().millisecondsSinceEpoch,
@@ -56,5 +56,9 @@ class DatabaseService{
   Future<void> deleteTodo(String id )async{
      final instance = await dbInstance;
      await instance.delete(_tableName,where:"id = ?", whereArgs: [id]);
+  }
+  Future<void>deleteAllTodo()async{
+    final instance = await dbInstance;
+    await instance.delete(_tableName);
   }
 }
