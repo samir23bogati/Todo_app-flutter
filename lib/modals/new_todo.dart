@@ -39,6 +39,16 @@ class Todo{
     return temp;
 
   }
+  Map<String,dynamic> toMapId(){
+    final Map<String,dynamic> temp = {
+      "_id":id,
+      "title":title,
+      "description":description,
+    };
+
+    return temp;
+
+  }
   Todo copyWith({
     String? id,
     String? title,

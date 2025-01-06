@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_app/cubit/add_todo_cubit.dart';
+import 'package:todo_app/cubit/check_connection_cubit.dart';
+import 'package:todo_app/cubit/check_data_sync_cubit.dart';
 import 'package:todo_app/cubit/delete_todo_cubit.dart';
 import 'package:todo_app/cubit/fetch_todo_cubit.dart';
+import 'package:todo_app/cubit/sync_data_with_server_cubit.dart';
 import 'package:todo_app/cubit/update_todo_cubit.dart';
 import 'package:todo_app/repository/todo_repository.dart';
 
@@ -14,6 +17,19 @@ class MultiBlocProviderWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
         providers: [
+          BlocProvider(
+            create: (context) => CheckConnectionCubit(),
+          ),
+          BlocProvider(
+            create: (context) => CheckDataSyncCubit(
+              checkConnectionCubit: context.read<CheckConnectionCubit>(),
+            ),
+          ),
+            BlocProvider(
+              create:(context)=> SyncDataWithServerCubit(
+                repository: context.read<TodoRepository>(),
+                ),
+          ),
           BlocProvider(
             create: (context) => AddTodoCubit(
               repository: context.read<TodoRepository>(),

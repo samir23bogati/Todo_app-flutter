@@ -15,4 +15,6 @@ abstract class TodoRepository {
 
 
   Future<Either<String,void>> deleteTodos({required String id});
+
+  Future<Either<String,void>> syncTodoWithServer(List<Todo>todos);
 }

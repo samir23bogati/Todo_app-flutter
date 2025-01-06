@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Scaffold(
       body: Center(
         child: FlutterLogo(
-          size: 180,
+          size: 189,
         ),
       ),
     );

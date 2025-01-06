@@ -87,4 +87,10 @@ class RemoteTodoRepository extends TodoRepository {
       return Left(e.toString());
     } 
   }
+  
+  @override
+  Future<Either<String, void>> syncTodoWithServer(List<Todo> todos) {
+    // TODO: implement syncTodoWithServer
+    throw UnimplementedError();
+  }
 }

@@ -40,7 +40,7 @@ class TodoRepositoryImpl extends TodoRepository{
           _todos.addAll(localTodoList);
           return Right(localTodoList);
         }
-        return const Left("No Internet Connection!!");
+        return const Left("No Internet Connection Available!!");
       }
       return Left(e.response?.data["message"] ?? "Unable to fetch todos");
     } catch (e) {
@@ -57,6 +57,7 @@ class TodoRepositoryImpl extends TodoRepository{
         options: Options(receiveDataWhenStatusError: false),
       );
       final _todo = Todo.fromMap(res.data["data"]);
+      await databaseService.addTodo(_todo);
       _todos.add(todo);
       return Right(_todo);
     } on DioException catch (e) {
@@ -96,6 +97,7 @@ class TodoRepositoryImpl extends TodoRepository{
         options: Options(receiveDataWhenStatusError: false),
       );
       final _todo = Todo.fromMap(res.data["data"]);
+      await databaseService.updateTodo(todo,isOffline: false);
       final index = _todos.indexWhere((e) => e.id == _todo.id);
       if(index != -1){
         _todos[index] = _todo;
@@ -103,7 +105,7 @@ class TodoRepositoryImpl extends TodoRepository{
       return Right(_todo);
     } on DioException catch (e) {
       if(e.error is SocketException){
-       final updatedTodo = await databaseService.updateTodo(todo);
+       final updatedTodo = await databaseService.updateTodo(todo,isOffline: true);
           final index = _todos.indexWhere((e) => e.id == updatedTodo.id);
       if(index != -1){
         _todos[index] = updatedTodo;
@@ -115,5 +117,25 @@ class TodoRepositoryImpl extends TodoRepository{
     } catch (e) {
       return Left(e.toString());
     } 
+  }
+  
+  @override
+  Future<Either<String, void>> syncTodoWithServer(List<Todo> todos) async{
+    try{
+      final _ =
+      await Dio().post("${Constants.baseUrl}/api/notes/sync",
+       options: Options(receiveDataWhenStatusError: false),
+      data:{
+        "todo":todos.map((e) => e.toMapId()).toList(),
+      });
+      return const Right(null);
+    }on DioException catch (e){
+      if(e.error is SocketException){
+        return const Left("No Internet Connection");
+      }
+      return Left(e.response?.data["message"]?? "unable to sync todos");
+    }catch (e){
+      return Left(e.toString());
+    }
   }
 }

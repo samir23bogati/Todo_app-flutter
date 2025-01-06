@@ -40,7 +40,7 @@ class LocalTodoRepository extends TodoRepository {
   
   @override
   Future<Either<String, Todo>> updateTodos({required Todo todo})async {
-    final updatedTodo = await databaseService.updateTodo(todo);
+    final updatedTodo = await databaseService.updateTodo(todo,isOffline: true);
     final index = _todos.indexWhere((e) => e.id == todo.id);
     if (index != -1){
       _todos[index] = updatedTodo;
@@ -50,5 +50,11 @@ class LocalTodoRepository extends TodoRepository {
   
   @override
   List<Todo> get todos => _todos;
+  
+  @override
+  Future<Either<String, void>> syncTodoWithServer(List<Todo> todos) {
+    // TODO: implement syncTodoWithServer
+    throw UnimplementedError();
+  }
    
 }

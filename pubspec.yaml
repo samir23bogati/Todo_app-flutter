@@ -49,6 +49,7 @@ dependencies:
   rxdart: ^0.28.0
   bloc_concurrency: ^0.2.5
   sqflite: ^2.4.1
+  connectivity_plus: ^6.1.1
 
 
 dev_dependencies:
